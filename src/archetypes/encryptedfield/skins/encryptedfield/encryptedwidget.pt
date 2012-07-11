@@ -35,7 +35,7 @@
                                value value;
                                size widget/size;
                                maxlength widget/maxlength;
-                               disabled widget/disabled"
+                               disabled python:widget.disabled(context, field)"
                />
       </metal:use>
     </metal:define>

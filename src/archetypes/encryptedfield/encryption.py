@@ -20,7 +20,7 @@ encode_aes = lambda c, s: base64.b64encode(c.encrypt(pad(s)))
 decode_aes = lambda c, e: c.decrypt(base64.b64decode(e)).rstrip(PADDING)
 
 #: This value is checked that our decryption key was correct
-MARKER = u"encrypted-value:"
+MARKER = "encrypted-value:"
 
 
 def get_cipher(secret):
@@ -44,7 +44,7 @@ def encrypt_value(key, value):
     if value is None:
         raise RuntimeError("Value was None")
 
-    if not type(value) == unicode:
+    if type(value) != unicode:
         raise RuntimeError("Values must be unicode strings")
 
     if not type(key) == str:
@@ -53,11 +53,11 @@ def encrypt_value(key, value):
     if PADDING in value:
         raise RuntimeError("Padding char %s must not exist in value" % PADDING)
 
+    value = value.encode("utf-8")
+
     value = MARKER + value
 
     cipher = get_cipher(key)
-
-    value = value.encode("utf-8")
 
     return encode_aes(cipher, value)
 
@@ -78,12 +78,19 @@ def decrypt_value(key, value):
 
     cipher = get_cipher(key)
 
-    value = decode_aes(cipher, value)
+    try:
+        value = decode_aes(cipher, value)
+    except ValueError:
+        # Base64 decoding has failed
+        # ValueError: Input strings must be a multiple of 16 in length
+        return None
+
+    marker = value[0:len(MARKER)]
+    if marker != MARKER:
+        return None
+
+    value = value[len(MARKER):]
 
     value = value.decode("utf-8")
 
-    marker = value[0:len(MARKER)]
-    if not marker:
-        return None
-
-    return value[len(MARKER):]
+    return value

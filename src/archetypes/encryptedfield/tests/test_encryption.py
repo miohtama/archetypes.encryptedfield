@@ -1,6 +1,8 @@
+# -*- coding: utf-8 -*-
+
 import os
 import unittest2 as unittest
-
+import base64
 
 from archetypes.encryptedfield.testing import\
     ARCHETYPES_ENCRYPTEDFIELD_INTEGRATION_TESTING
@@ -13,36 +15,47 @@ from archetypes.encryptedfield.envkey import EnvironKeyProvider
 from Products.Archetypes.tests.utils import mkDummyInContext
 from Products.Archetypes.atapi import Schema, BaseContentMixin
 
+# Key must be 32 bytes long
+KEY = "x" * 32
+
+BAD_KEY = "y" * 32
+
 
 class TestEncrypt(unittest.TestCase):
-
+    """ Test encryption module """
     layer = ARCHETYPES_ENCRYPTEDFIELD_INTEGRATION_TESTING
 
     def setUp(self):
         # you'll want to use this to set up anything you need for your tests
         # below
-        self.key = "foobar"
+        self.key = KEY
 
     def test_encrypt(self):
-        encryption.encrypt_value(u"Foobar", self.key)
+        encryption.encrypt_value(self.key, u"Foobar")
 
     def test_decrypt(self):
         value = u"Foobar"
-        encrypted = encryption.encrypt_value(value, self.key)
-        decrypted = encryption.decrypt_value(encrypted, self.key)
+        encrypted = encryption.encrypt_value(self.key, value)
+        decrypted = encryption.decrypt_value(self.key, encrypted)
+        self.assertEqual(value, decrypted)
+
+    def test_decrypt_utf8(self):
+        value = u"ÅÄÖ"
+        encrypted = encryption.encrypt_value(self.key, value)
+        decrypted = encryption.decrypt_value(self.key, encrypted)
         self.assertEqual(value, decrypted)
 
     def test_encrypt_not_unicode(self):
         try:
-            encryption.encrypt_value("bytestring", self.key)
+            encryption.encrypt_value(self.key, "x" * 16)
             raise AssertionError("Should not be reached")
         except RuntimeError:
             pass
 
     def test_decrypt_bad_key(self):
         value = u"Foobar"
-        encrypted = encryption.encrypt_value(value, self.key)
-        decrypted = encryption.decrypt_value(encrypted, "xxxx")
+        encrypted = encryption.encrypt_value(self.key, value)
+        decrypted = encryption.decrypt_value(BAD_KEY, encrypted)
         self.assertEqual(decrypted, None)
 
 TEST_SCHEMA = Schema((
@@ -61,7 +74,7 @@ class NotAllowedProvider(EnvironKeyProvider):
     Test that the user cannot decrypt fields and we should get XXX output.
     """
 
-    def canDecrypt(field):
+    def canDecrypt(self, field):
         """
         :return: True if the currently logged in user has decryption priviledges
         """
@@ -69,13 +82,13 @@ class NotAllowedProvider(EnvironKeyProvider):
 
 
 class TestField(unittest.TestCase):
-
+    """ Test field and widget """
     layer = ARCHETYPES_ENCRYPTEDFIELD_INTEGRATION_TESTING
 
     def setUp(self):
         # you'll want to use this to set up anything you need for your tests
         # below
-        self.key = "foobar"
+        self.key = KEY
         os.environ["DATA_ENCRYPTION_SECRET"] = self.key
 
         self.schema = TEST_SCHEMA
@@ -119,7 +132,7 @@ class TestField(unittest.TestCase):
         self.assertEqual(value, decrypted)
 
     def test_decrypt_no_key(self):
-        value = ""
+        value = "foobar"
         field = self.schema["testField"]
         field.set(self.dummy, value)
         del os.environ["DATA_ENCRYPTION_SECRET"]
@@ -127,10 +140,33 @@ class TestField(unittest.TestCase):
         self.assertEqual(decrypted, field.msg_cannot_crypt)
 
     def test_decrypt_corrupted_data(self):
-        self.dummy.testField = "35938503"
+        self.dummy.testField = "z" * 16
         field = self.schema["testField"]
         decrypted = field.get(self.dummy)
         self.assertEqual(decrypted, field.msg_bad_key)
+
+    def test_decrypt_corrupted_base64(self):
+        self.dummy.testField = base64.b64encode("z" * 16)
+        field = self.schema["testField"]
+        decrypted = field.get(self.dummy)
+        self.assertEqual(decrypted, field.msg_bad_key)
+
+    def test_save_widget(self):
+        """ Widge should spit out empty marker instead of actual value if no save priviledge """
+        doc = self.dummy
+        field = doc.Schema()['testField']
+        widget = field.widget
+        value = "zzzz"
+
+        self.assertFalse(widget.isDisabled(doc, field))
+
+        form = {'testField': value}
+        marker = {}
+        result = widget.process_form(doc, field, form, empty_marker=marker)
+        expected = value, {}
+
+        # We should get empty marker here
+        self.assertEqual(expected, result)
 
 
 class TestDecryptionNotAllowed(unittest.TestCase):
@@ -142,7 +178,7 @@ class TestDecryptionNotAllowed(unittest.TestCase):
     def setUp(self):
         # you'll want to use this to set up anything you need for your tests
         # below
-        self.key = "foobar"
+        self.key = KEY
         os.environ["DATA_ENCRYPTION_SECRET"] = self.key
 
         self.schema = TEST_SCHEMA.copy()
@@ -171,15 +207,14 @@ class TestDecryptionNotAllowed(unittest.TestCase):
         field = doc.Schema()['testField']
         widget = field.widget
 
-        self.assertTrue(widget.isDisabled(doc))
+        self.assertTrue(widget.isDisabled(doc, field))
 
         form = {'testField': 'xxxxx'}
         marker = {}
         result = widget.process_form(doc, field, form, empty_marker=marker)
 
         # We should get empty marker here
-        expected = marker, {}
-        self.assertEqual(expected, result)
+        self.assertEqual(marker, result)
 
     def test_save_field(self):
         doc = self.dummy
