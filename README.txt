@@ -23,7 +23,8 @@ Internals
 
 Provide EncryptionField Archetypes field and matching EncryptoinWidget.
 
-Save encrypted values in the database using AES encryption.
+Save encrypted values in the database using AES encryption. String values are padded to 16-bytes AES
+boundary using a padding character ``{``. The padding character cannot be contained in the value.
 
 By default, the encrypted key is read from an environment variable, but different ``IKeyProvider`` can be used.
 

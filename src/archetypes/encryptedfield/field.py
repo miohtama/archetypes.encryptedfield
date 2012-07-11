@@ -81,13 +81,13 @@ class EncryptedField(StringField):
         request = getattr(instance, "REQUEST", None)
         provider = self.key_provider(instance, request)
 
-        if not provider.canDecrypt(self):
-            raise CannotSaveError("You cannot save this field because you have no encryption right")
-
         # Handle None save specially
         if value in [None, ""]:
             self.getStorage(instance).set(self.getName(), instance, value, **kwargs)
             return
+
+        if not provider.canDecrypt(self):
+            raise CannotSaveError("You cannot save this field because you have no encryption right")
 
         key = provider.getKey(self)
 
