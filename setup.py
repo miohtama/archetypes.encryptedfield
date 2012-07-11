@@ -16,7 +16,7 @@ long_description = (
 
 setup(name='archetypes.encryptedfield',
       version=version,
-      description="",
+      description="Symmetric string value encryption for Plone Archetypes content system",
       long_description=long_description,
       # Get more strings from
       # http://pypi.python.org/pypi?%3Aaction=list_classifiers
