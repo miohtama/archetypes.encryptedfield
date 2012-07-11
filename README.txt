@@ -18,6 +18,20 @@ Field value is stored encrypted in Data.fs.
 
 Support Archetypes. Dexterity support availabl
 
+Installation
+==============
+
+- Add ``archetypes.encryptedfield`` to your eggs in buildout.cfg
+
+- Install in Add/remove add-ons
+
+In your Archetypes schema code you can then use::
+
+    your_schema = Schema((
+            EncryptedField("testField"),
+    ))
+
+
 Internals
 ===========
 
@@ -49,3 +63,9 @@ Encryption
 ============
 
 Encryption is done using AES of `PyCrypto <http://pypi.python.org/pypi/pycrypto/>`_ library.
+
+Author
+========
+
+`Mikko Ohtamaa <http://opensourcehacker.com>`_
+
