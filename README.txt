@@ -21,7 +21,7 @@ Support Archetypes. Dexterity support availabl
 Internals
 ===========
 
-Provide EncryptionField Archetypes field.
+Provide EncryptionField Archetypes field and matching EncryptoinWidget.
 
 Save encrypted values in the database using AES encryption.
 
@@ -30,4 +30,6 @@ By default, the encrypted key is read from an environment variable, but differen
 There is special right check for saving the encrypted values. Decryption is always possible,
 but if you do not have encryption rights the value will come out as "XXXX" from the field.
 
-None and empty string values are specially handled and never encrypted.
+None and empty string values are specially handled and never encrypted. Saving None does not require the encryption key.
+
+EncryptionWidget will show "XXX" and disable text input if the user does not have permission to access the value.

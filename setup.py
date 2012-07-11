@@ -29,12 +29,13 @@ setup(name='archetypes.encryptedfield',
       url='http://svn.plone.org/svn/collective/',
       license='gpl',
       packages=find_packages('src'),
-      package_dir = {'': 'src'},
+      package_dir={'': 'src'},
       namespace_packages=['archetypes', ],
       include_package_data=True,
       zip_safe=False,
       install_requires=[
           'setuptools',
+          'pycrypto'
           # -*- Extra requirements: -*-
       ],
       extras_require={'test': ['plone.app.testing']},

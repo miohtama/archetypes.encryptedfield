@@ -1,8 +1,6 @@
 from AccessControl import ClassSecurityInfo
 from Products.Archetypes.Widget import StringWidget
 
-from archetypes.encryptedfield.interfaces import IKeyProvider
-
 
 class EncryptedgWidget(StringWidget):
     """
@@ -22,15 +20,22 @@ class EncryptedgWidget(StringWidget):
 
         :return: Boolean
         """
-        provider = IKeyProvider((context, context.REQUEST))
-        return not provider.canDecrypt()
+        provider = self.field.key_provider(context, context.REQUEST)
+
+        if not provider.canDecrypt():
+            return True
+
+        if not provider.getKey():
+            return True
+
+        return False
 
     def disabled(self):
         """ Called from template.
         :return: HTML for disabling the field.
         """
         if self.isDisabled():
-            return 'disabled="DISABLED'
+            return "DISABLED"
         return None
 
     security.declarePublic('process_form')

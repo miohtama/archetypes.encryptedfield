@@ -10,6 +10,11 @@ class IKeyProvider(Interface):
     Adapter for (context, HTTP request).
 
     Extract the encryption key from the environment.
+
+    1) If the user has not *permission* to access the value canDecrypt() must return False
+
+    2) If the key is not available in the system getKey() must return None
+
     """
 
     def canDecrypt(field):
@@ -21,4 +26,3 @@ class IKeyProvider(Interface):
         """
         :return: Symmetric encryption key as string or None if not available
         """
-

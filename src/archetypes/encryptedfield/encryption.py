@@ -51,7 +51,7 @@ def encrypt_value(key, value):
         raise RuntimeError("Encryption key must be ASCII string")
 
     if PADDING in value:
-        raise RuntimeError("Padding char must not exist in value")
+        raise RuntimeError("Padding char %s must not exist in value" % PADDING)
 
     value = MARKER + value
 
@@ -69,6 +69,9 @@ def decrypt_value(key, value):
 
     if key is None:
         raise RuntimeError("Key was not provided")
+
+    if value is None:
+        raise RuntimeError("Value was None")
 
     if type(value) != str:
         raise RuntimeError("Encrypted values must be stored as base64 encoded bytestrings")
