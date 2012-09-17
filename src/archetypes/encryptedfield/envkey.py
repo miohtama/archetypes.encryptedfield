@@ -13,9 +13,10 @@ from archetypes.encryptedfield.interfaces import IKeyProvider
 ENV_VAR_NAME = "DATA_ENCRYPTION_SECRET"
 
 
-key = os.environ.get(ENV_VAR_NAME)
-if len(key) != 16:
-    raise RuntimeError("Encryption key must be 16 bytes")
+key = os.environ.get(ENV_VAR_NAME, None)
+if key:
+    if len(key) != 16:
+        raise RuntimeError("Encryption key must be 16 bytes")
 
 
 class EnvironKeyProvider(object):
