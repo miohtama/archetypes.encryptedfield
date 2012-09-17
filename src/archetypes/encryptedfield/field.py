@@ -7,6 +7,10 @@ from archetypes.encryptedfield.envkey import EnvironKeyProvider
 from archetypes.encryptedfield import encryption
 from archetypes.encryptedfield.widget import EncryptedWidget
 
+#: Field value marker which means
+#: that you have no right to read the field
+CANNOT_READ_VALUE = u"XXXXXX"
+
 
 class CannotSaveError(RuntimeError):
     """
@@ -27,7 +31,7 @@ class EncryptedField(StringField):
         'key_provider': EnvironKeyProvider,
         'msg_cannot_crypt': u"Decryption is not available",
         'msg_bad_key': u"Decryption key does not match data",
-        "msg_decrypt_filler": u"XXXXX",
+        "msg_decrypt_filler": CANNOT_READ_VALUE,
         "widget": EncryptedWidget
         })
 
